@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"fmt"
 	"math"
+	"math/rand"
 )
 
 type Simulation struct {
@@ -55,64 +56,85 @@ func main() {
 	simulation := createSimulation(firstLine)
 
 	rides := createRides(scanner)
+	initialRides := rides
 
-	fmt.Println(simulation)
-	fmt.Println(rides)
+	bestScore := 0
+	bestVehicles := make([]Vehicle, simulation.Vehicles)
 
-	vehicles := make([]Vehicle, simulation.Vehicles)
-
-	for i := range vehicles {
-		vehicles[i] = Vehicle{
-			Position: Coordinates{
-				X: 0,
-				Y: 0,
-			},
-			CurrentRide:    -1,
-			CompletedRides: []int{},
-			Id:             i,
+	for x := 0; x < 1000; x++ {
+		for i := range rides {
+			j := rand.Intn(i + 1)
+			rides[i], rides[j] = rides[j], rides[i]
 		}
-	}
 
-	for step := 0; step < simulation.Steps; step++ {
-		for i, vehicle := range vehicles {
-			if step >= vehicle.AvailableAt {
-				closestRideIndex := -1
-				shortestFinishTime := -1
-				closestRide := Ride{}
-				distanceToClosestRide := 0
-				closestDistance := -1
-				for j, ride := range rides {
-					distanceToClosestRide = CalculateDistance(vehicle.Position, ride.Start)
+		totalDistance := 0
 
-					rideDistance := CalculateDistance(ride.Start, ride.End)
-					timeUntilStart := ride.Earliest - step
-					finishTime := step + int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
-
-					if shortestFinishTime == -1 ||  (distanceToClosestRide < closestDistance && finishTime < ride.Latest && finishTime < shortestFinishTime) {
-						closestDistance = distanceToClosestRide
-						closestRideIndex = j
-						closestRide = ride
-						shortestFinishTime = finishTime
-					}
-				}
-				rideDistance := CalculateDistance(closestRide.Start, closestRide.End)
-				timeUntilStart := closestRide.Earliest - step
-				vehicle.AvailableAt += int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
-				vehicle.CompletedRides = append(vehicle.CompletedRides, closestRide.Id)
-				vehicle.Position = closestRide.End
-				if len(rides) == 0 {
-					break
-				}
-				rides = append(rides[:closestRideIndex], rides[closestRideIndex+1:]...)
-
-				vehicles[i] = vehicle
+		vehicles := make([]Vehicle, simulation.Vehicles)
+		for i := range vehicles {
+			vehicles[i] = Vehicle{
+				Position: Coordinates{
+					X: 0,
+					Y: 0,
+				},
+				CurrentRide:    -1,
+				CompletedRides: []int{},
+				Id:             i,
 			}
 		}
+
+		for step := 0; step < simulation.Steps; step++ {
+			for i, vehicle := range vehicles {
+				if step >= vehicle.AvailableAt {
+					closestRideIndex := -1
+					shortestFinishTime := -1
+					closestRide := Ride{}
+					distanceToClosestRide := 0
+					closestDistance := -1
+					for j, ride := range rides {
+						distanceToClosestRide = CalculateDistance(vehicle.Position, ride.Start)
+
+						rideDistance := CalculateDistance(ride.Start, ride.End)
+						timeUntilStart := ride.Earliest - step
+						finishTime := step + int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
+
+						if shortestFinishTime == -1 || (distanceToClosestRide < closestDistance && finishTime < ride.Latest && finishTime < shortestFinishTime) {
+							closestDistance = distanceToClosestRide
+							closestRideIndex = j
+							closestRide = ride
+							shortestFinishTime = finishTime
+						}
+					}
+					rideDistance := CalculateDistance(closestRide.Start, closestRide.End)
+					timeUntilStart := closestRide.Earliest - step
+					vehicle.AvailableAt += int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
+					vehicle.CompletedRides = append(vehicle.CompletedRides, closestRide.Id)
+					vehicle.Position = closestRide.End
+					if len(rides) == 0 {
+						break
+					}
+					rides = append(rides[:closestRideIndex], rides[closestRideIndex+1:]...)
+
+					vehicles[i] = vehicle
+
+					totalDistance += rideDistance
+					if closestRide.Earliest == step {
+						totalDistance += simulation.Bonus
+					}
+				}
+			}
+		}
+		rides = initialRides
+		if totalDistance > bestScore {
+			bestVehicles = vehicles
+			bestScore = totalDistance
+		}
+
 	}
+	fmt.Printf("%+v", bestVehicles)
 
-	fmt.Printf("%+v", vehicles)
+	fmt.Println(bestScore)
 
-	ioutil.WriteFile(outPath, []byte(CreateOutput(vehicles)), 0644)
+	ioutil.WriteFile(outPath, []byte(CreateOutput(bestVehicles)), 0644)
 }
 
 func createSimulation(line string) Simulation {
