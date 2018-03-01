@@ -82,7 +82,12 @@ func main() {
 				distanceToClosestRide := 0
 				for j, ride := range rides {
 					distanceToClosestRide = CalculateDistance(vehicle.Position, ride.Start)
-					if closestDistance == -1 || distanceToClosestRide < closestDistance {
+
+					rideDistance := CalculateDistance(ride.Start, ride.End)
+					timeUntilStart := ride.Earliest - step
+					finishTime := int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
+
+					if closestDistance == -1 || (distanceToClosestRide < closestDistance && step + finishTime < ride.Latest) {
 						closestDistance = distanceToClosestRide
 						closestRideIndex = j
 						closestRide = ride
