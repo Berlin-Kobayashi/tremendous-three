@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"time"
 )
 
 type Simulation struct {
@@ -64,6 +65,7 @@ func main() {
 
 	for x := 0; x < 100; x++ {
 		for i := range rides {
+			rand.Seed(time.Now().UnixNano())
 			j := rand.Intn(i + 1)
 			rides[i], rides[j] = rides[j], rides[i]
 		}
