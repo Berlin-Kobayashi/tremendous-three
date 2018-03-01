@@ -26,6 +26,7 @@ type Vehicle struct {
 	CurrentRide    int
 	CompletedRides []int
 	Id             int
+	AvailableAt    int
 }
 
 type Coordinates struct {
@@ -72,24 +73,34 @@ func main() {
 		}
 	}
 
-	for i, vehicle := range vehicles {
-		closestRideIndex := -1
-		closestDistance := -1
-		closestRide := Ride{}
-		for j, ride := range rides {
-			distance := CalculateDistance(vehicle.Position, ride.Start)
-			if closestDistance == -1 || distance < closestDistance {
-				closestDistance = distance
-				closestRideIndex = j
-				closestRide = ride
+	for step := 0; step < simulation.Steps; step++ {
+		for i, vehicle := range vehicles {
+			if step >= vehicle.AvailableAt {
+				closestRideIndex := -1
+				closestDistance := -1
+				closestRide := Ride{}
+				distanceToClosestRide := 0
+				for j, ride := range rides {
+					distanceToClosestRide = CalculateDistance(vehicle.Position, ride.Start)
+					if closestDistance == -1 || distanceToClosestRide < closestDistance {
+						closestDistance = distanceToClosestRide
+						closestRideIndex = j
+						closestRide = ride
+					}
+				}
+				rideDistance := CalculateDistance(closestRide.Start, closestRide.End)
+				timeUntilStart := closestRide.Earliest - step
+				vehicle.AvailableAt += int(math.Max(float64(timeUntilStart), float64(distanceToClosestRide))) + rideDistance
+				vehicle.CompletedRides = append(vehicle.CompletedRides, closestRide.Id)
+				vehicle.Position = closestRide.End
+				if len(rides) == 0 {
+					break
+				}
+				rides = append(rides[:closestRideIndex], rides[closestRideIndex+1:]...)
+
+				vehicles[i] = vehicle
 			}
 		}
-
-		vehicle.CompletedRides = append(vehicle.CompletedRides, closestRide.Id)
-		vehicle.Position = closestRide.End
-		rides = append(rides[:closestRideIndex], rides[closestRideIndex+1:]...)
-
-		vehicles[i] = vehicle
 	}
 
 	fmt.Printf("%+v", vehicles)
