@@ -56,12 +56,13 @@ func main() {
 	simulation := createSimulation(firstLine)
 
 	rides := createRides(scanner)
-	initialRides := rides
+	initialRides := []Ride{}
+	copy(initialRides, rides)
 
 	bestScore := 0
 	bestVehicles := make([]Vehicle, simulation.Vehicles)
 
-	for x := 0; x < 1000; x++ {
+	for x := 0; x < 100; x++ {
 		for i := range rides {
 			j := rand.Intn(i + 1)
 			rides[i], rides[j] = rides[j], rides[i]
@@ -123,7 +124,7 @@ func main() {
 				}
 			}
 		}
-		rides = initialRides
+		copy(rides, initialRides)
 		if totalDistance > bestScore {
 			bestVehicles = vehicles
 			bestScore = totalDistance
