@@ -18,6 +18,11 @@ type Ride struct {
 	StartX, StartY, EndX, EndY, Earliest, Latest int
 }
 
+type Vehicle struct {
+	X, Y, CurrentRide int
+	CompletedRides    []int
+}
+
 func main() {
 	var inputPath string
 	flag.StringVar(&inputPath, "in", "", "The path to the input file")
@@ -41,21 +46,23 @@ func main() {
 	firstLine := scanner.Text()
 	simulation := createSimulation(firstLine)
 
+	rides := createRides(scanner)
+
 	fmt.Println(simulation)
-
-	rides := []Ride{}
-
-	for scanner.Scan() {
-		currentLine := scanner.Text()
-
-		rides = append(rides, createRide(currentLine))
-	}
-
 	fmt.Println(rides)
 
-	if err := scanner.Err(); err != nil {
-		panic(err)
+	vehicles := make([]Vehicle, simulation.Vehicles)
+
+	for i := range vehicles {
+		vehicles[i] = Vehicle{
+			X:              0,
+			Y:              0,
+			CurrentRide:    -1,
+			CompletedRides: []int{},
+		}
 	}
+
+	fmt.Println(vehicles)
 
 	ioutil.WriteFile(outPath, []byte(strings.Join(data, ",")), 0644)
 }
@@ -71,6 +78,22 @@ func createSimulation(line string) Simulation {
 		intSlice[4],
 		intSlice[5],
 	}
+}
+
+func createRides(s *bufio.Scanner) []Ride {
+	rides := []Ride{}
+
+	for s.Scan() {
+		currentLine := s.Text()
+
+		rides = append(rides, createRide(currentLine))
+	}
+
+	if err := s.Err(); err != nil {
+		panic(err)
+	}
+
+	return rides
 }
 
 func createRide(line string) Ride {

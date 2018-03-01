@@ -31,8 +31,8 @@ plus an additional bonus if the ride also started precisely on time.
 
 Vehicle object
     currentLocation obj/arr of 2
-    assignedRides int[]
- 
+    currentRide int
+    completedRides int[]
  Ride object
     start_intersection obj/arr of 2
     finish_intersection obj/arr of 2
