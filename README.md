@@ -14,8 +14,16 @@ Each ride:
     distance int
     start_intersection obj/arr of 2
     finish_intersection obj/arr of 2
-    start_time timestamp?
-    finish_time timestamp?
+    start_actual step int
+    finish_actual step int
+    start_earliest step int
+    finish_latest step int
+    
+Conditions mandatory:
+    start_actual >= start_earliest
+    
+Conditions efficient:
+    finish_actual <= finish_latest
     
     
 For every ride that finishes on time (or early), you will earn points proportional to the distance of that ride;
